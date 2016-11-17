@@ -1,27 +1,9 @@
 <?php
-session_start();
-if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'http://lab.lojawmaviamentos.com.br') !== false || (isset($lab) && $lab)) {
-    define('DBNAME', 'wmerplab');
-    define('SERVER_URL', 'http://lab.lojawmaviamentos.com.br');
-    define('USER_PASS', 'parceria2015');
-} else {
-    define('DBNAME', 'openerpestribos');
-    define('SERVER_URL', 'http://localhost:8069');
-    define('USER_PASS', 'parceria2017');
-}
-if (!isset($_SESSION['valid_referer']) && strpos($_SERVER['HTTP_REFERER'], 'http://162.243.83.106:8069') !== 0) {
-    if (!isset($check) || $check)
-        die('Acesso n&atilde;o autorizado');
-} else {
-    $_SESSION['valid_referer'] = true;
-}
-define('COMPANY_NAME', 'Fumiya Estrutural Ferro e Aço Ltda.');
-define('COMPANY_LOGO', 'fumiya_logo.png');
-define('COMPANY_PHONE', '(62) 3098-7300');
-define('REQUEST_VALID_KEY', 'kkn87*fBG5vF2#).;h?');
-//error_reporting(E_ERROR);
+/**
+DEFINE IN A CONFIG FILE 'DBNAME' AND 'SERVER_URL'
+*/
+
 require_once 'xmlrpc/lib/xmlrpc.inc';
-require_once 'mpdf/mpdf.php';
 
 /* From: http://stackoverflow.com/questions/3835636/php-replace-last-occurence-of-a-string-in-a-string */
 function str_lreplace($search, $replace, $subject)
@@ -34,13 +16,6 @@ function str_lreplace($search, $replace, $subject)
     return $subject;
 }
 
-function validKey($key, $add='') {
-    $composit_key = $key . date('Y-m-d H:i') . $add;
-    $hash = md5($composit_key);
-    var_dump($hash);
-    if ($hash == $key) return true;
-    return false;
-}
 class openerp {
     public $user = 'admin';
     public $password = USER_PASS;
@@ -487,7 +462,3 @@ class OpenERPOSV {
         return $this->recs($this->searchIds($domain), $fields);
     }
 }
-
-
-openerp::i()->connect();
-openerp::i()->login();
