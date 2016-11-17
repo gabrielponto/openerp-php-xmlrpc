@@ -24,19 +24,39 @@ class openerp {
     public $client;
     public $server_url = SERVER_URL;
     public $return_type;
+	
+	protected $is_connected = false;
+	protected $is_logged = false;
 
+	public function isConnected() {
+		return $this->is_connected;
+	}
+	
+	public function isLogged() {
+		return $this->is_logged;
+	}
+	
     public function connect() {
         $this->client = new xmlrpc_client($this->server_url . "/xmlrpc/common");
         $this->client->setSSLVerifyPeer(0);
+		$this->is_connected = true;
     }
     
-    public function login() {
+    public function login($user = null, $password = null) {
+		if ($user) {
+			$this->user = $user;
+		}
+		if ($password) {
+			$this->password = $password;
+		}
+		if (!$this->isConnected()) $this->connect();
         $c_msg = new xmlrpcmsg('login');
         $c_msg->addParam(new xmlrpcval($this->dbname, "string"));
         $c_msg->addParam(new xmlrpcval($this->user, "string"));
         $c_msg->addParam(new xmlrpcval($this->password, "string"));
         $c_response = $this->client->send($c_msg);
         $this->uid = $c_response->value()->scalarval();
+		$this->is_logged = true;
         return $c_response;
     }
 
@@ -363,6 +383,10 @@ class OpenERPOSV {
     
     
     public function __construct($object, $id = null, $fields = '') {
+		// Check if is connected and logged
+		if (!openerp::i()->isConnected() || !openerp::i()->isLogged()) {
+			throw new Exception('O usuário não está conectado. Use openerp::i()->login(user, pass) para fazer login');
+		}
         $this->external_object = $object;
         if ($id) {
             $this->find($id, $fields);
