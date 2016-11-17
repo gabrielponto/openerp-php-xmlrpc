@@ -16,6 +16,18 @@ function str_lreplace($search, $replace, $subject)
     return $subject;
 }
 
+/* From: http://stackoverflow.com/questions/173400/how-to-check-if-php-array-is-associative-or-sequential */
+function isAssoc(array $arr)
+{
+    if (array() === $arr) return false;
+    return array_keys($arr) !== range(0, count($arr) - 1);
+}
+
+function _log($msg) {
+	
+}
+
+
 class openerp {
     public $user = 'admin';
     public $password = USER_PASS;
@@ -57,7 +69,7 @@ class openerp {
         $c_response = $this->client->send($c_msg);
         $this->uid = $c_response->value()->scalarval();
 		$this->is_logged = true;
-        return $c_response;
+        return $this->uid;
     }
 
     public function read($id, $object, $fields = '') {
@@ -148,6 +160,56 @@ class openerp {
         return $ids;
     }
     
+	public function custom($object, $function, $params = array()) {
+		$this->client_obj = new xmlrpc_client($this->server_url . '/xmlrpc/object');
+		$this->client_obj->setSSLVerifyPeer(0);
+        if ($this->return_type) $this->client_obj->return_type = 'phpvals';
+		
+		$context = array(
+            'lang' => new xmlrpcval('pt_BR', 'string')
+        );
+
+		$params = $this->convert_params_xmlrpcvals($params);
+		
+        $msg = new xmlrpcmsg('execute');
+        $msg->addParam(new xmlrpcval($this->dbname, "string"));
+        $msg->addParam(new xmlrpcval($this->uid, "int"));
+        $msg->addParam(new xmlrpcval($this->password, "string"));
+        $msg->addParam(new xmlrpcval($object, "string"));
+        $msg->addParam(new xmlrpcval($function, "string"));
+		foreach ($params as $param) {
+			$msg->addParam($param);
+		}
+        $msg->addParam(new xmlrpcval($context, 'struct'));
+        $resp = $this->client_obj->send($msg);
+		if ($resp->faultCode() == 0)
+			return $resp->value()->scalarval();
+		// Caso contrário dispara uma exception
+		throw new Exception('XML-RPC: Code: ' . $resp->faultCode() . ', Message: ' . $resp->faultString());
+	}
+	
+	public function convert_params_xmlrpcvals($params) {
+		$result = array();
+		$map = array('boolean'=>'boolean', 'integer'=>'int', 'double'=>'double', 'string'=>'string');
+		foreach ($params as $key=>$param) {
+			$type = gettype($param);
+			if (in_array($type, array_keys($map))) {
+				$result[$key] = new xmlrpcval($param, $map[$type]);
+			} elseif ($type == 'array') {
+				if (isAssoc($param)) {
+					// struct
+					$result[$key] = new xmlrpcval($this->convert_params_xmlrpcvals($param), 'struct');
+				} else {
+					// array
+					$result[$key] = new xmlrpcval($this->convert_params_xmlrpcvals($param), 'array');
+				}
+			} else {
+				// Invalid value, log
+				_log('Invalid value: TYPE: ' . $type . ', CONTENT: ' . var_export($param, true));
+			}
+		}
+		return $result;
+	}
     public function move_stock_by_date($product_id, $date) {
         $this->client_obj = new xmlrpc_client($this->server_url . '/xmlrpc/object');
         $this->client_obj->setSSLVerifyPeer(0);

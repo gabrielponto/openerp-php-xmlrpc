@@ -13,6 +13,16 @@ processor($_GET);
 function login($data) {
 	return openerp::i()->login($data['user'], $data['password']);
 }
+function custom($data) {
+	if ($data['params'])
+		$data['params'] = json_decode($data['params']);
+	openerp::i()->login($data['user'], $data['password']);
+	try {
+		return openerp::i()->custom($data['object'], $data['function'], $data['params']);
+	} catch (Exception $e) {
+		return $e->getMessage();
+	}
+}
 ?>
 <html>
 	<head>
@@ -34,7 +44,8 @@ function login($data) {
 		<style type="text/css">
 			#loading {
 				background: #600;
-				color:#000;
+				color:#FFF;
+				font-weight:bold;
 				position:fixed;
 				top:0;
 				padding:5px;
@@ -61,5 +72,32 @@ function login($data) {
 		</form>
 		<h3>Result</h3>
 		<p id="result-login"></p>
+		<h2>Custom Function</h2>
+		<form action="" method="get" data-result="result-custom">
+			<input type="hidden" name="action" value="custom" />
+			<label>
+				<span>User</span>
+				<input type="text" name="user" />
+			</label>
+			<label>
+				<span>Password</span>
+				<input type="text" name="password" />
+			</label>
+			<label>
+				<span>Object</span>
+				<input type="text" name="object" />
+			</label>
+			<label>
+				<span>Function</span>
+				<input type="text" name="function" />
+			</label>
+			<label>
+				<span>Params (JSON Format)</span>
+				<input type="text" name="params" />
+			</label>
+			<input type="submit" value="TEST" />
+		</form>
+		<h3>Result</h3>
+		<p id="result-custom"></p>
 	</body>
 </html>
