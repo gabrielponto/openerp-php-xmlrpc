@@ -2,6 +2,8 @@
 // Processor
 function processor($data) {
 	if (isset($data['action']) && $data['action']) {
+		require_once '../odoo_config.php';
+		require_once 'openerp.php';
 		$action = $data['action'];
 		echo $action($data);
 		exit;
@@ -9,7 +11,6 @@ function processor($data) {
 }
 processor($_GET);
 function login($data) {
-	require_once 'openerp.php';
 	return openerp::i()->login($data['user'], $data['password']);
 }
 ?>
