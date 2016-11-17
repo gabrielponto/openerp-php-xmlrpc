@@ -22,14 +22,29 @@ function login($data) {
 			$(document).ready(function() {
 				$('form').submit(function(e) {
 					e.preventDefault();
+					$('#loading').show();
 					var id = $(this).attr('data-result');
 					var data = $(this).serialize();
-					$('#'+id).load('?' + data);
+					$('#'+id).load('', data, function() {
+						$('#loading').hide();
+					});
 				});
 			});
 		</script>
+		<style type="text/css">
+			#loading {
+				background: #600;
+				color:#000;
+				position:fixed;
+				top:0;
+				padding:5px;
+				left:50%;
+				margin-left:-50px;
+			}
+		</style>
 	</head>
 	<body>
+		<div id="loading" style="display:none">Carregando...</div>
 		<h1>Openerp/Odoo PHP XML-RPC Test Interface</h1>
 		<h2>Login</h2>
 		<form action="" method="get" data-result="result-login">
