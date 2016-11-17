@@ -434,6 +434,11 @@ class request {
         return $default;
     }
 }
+class CleanObject {
+	public function __get($name) {
+		return '';
+	}
+}
 class OpenERPOSV {
     public $external_object;
     public $_data = array();
@@ -458,6 +463,10 @@ class OpenERPOSV {
     public function __set($name, $value) {
         $this->_data[$name] = $value;
     }
+	
+	public function __call($name, $arguments) {
+		return $this->callCustom($name, $arguments);
+	}
     
     public function setData($data, $index = 0) {
         if (!is_object($data)) {
@@ -523,6 +532,9 @@ class OpenERPOSV {
         }
     }
     
+	public function callCustom($method, $params = array()) {
+		return openerp::i()->custom($this->external_object, $method, $params);
+	}
     public function searchIds($domain) {
         $ids = openerp::i()->searchIds($domain, $this->external_object);
         return $ids;
@@ -547,4 +559,16 @@ class OpenERPOSV {
     public function search($domain = array(), $fields = '') {
         return $this->recs($this->searchIds($domain), $fields);
     }
+	
+	protected $_relations = array();
+	public function relation($field, $object) {
+		if (!isset($this->_relations[$field])) {
+			$fieldValue = $field . '_id';
+			if ($this->$fieldValue)
+				$this->_relations[$field] = new OpenERPOSV($object, $this->$fieldValue);
+			else
+				$this->_relations[$field] = new CleanObject();
+		}
+		return $this->_relations[$field];
+	}
 }
