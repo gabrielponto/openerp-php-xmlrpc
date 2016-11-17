@@ -5,7 +5,7 @@ function processor($data) {
 		require_once '../odoo_config.php';
 		require_once 'openerp.php';
 		$action = $data['action'];
-		echo $action($data);
+		echo var_export($action($data), true);
 		exit;
 	}
 }
