@@ -1,8 +1,11 @@
 <?php
 // Processor
+$config_file = getenv('CONFIG_FILE');
+if ($config_file === false) $config_file = 'default.php';
 function processor($data) {
+	global $config_file;
 	if (isset($data['action']) && $data['action']) {
-		require_once '../odoo_config.php';
+		require_once 'conf/' . $config_file;
 		require_once 'openerp.php';
 		$action = $data['action'];
 		echo var_export($action($data), true);
